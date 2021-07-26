@@ -1,0 +1,32 @@
+{
+  "name": "campaign",
+  "version": "1.0.0",
+  "description": "\"A fundraising campaign Ethereum dApp which helps curb misuse of funds by allowing campaign contributors to vote on the disbursement requests created by the campaign creator.\" ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sadministrator/campaign.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "kickstarter",
+    "react",
+    "campaign"
+  ],
+  "author": "Marco Serrano",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sadministrator/campaign/issues"
+  },
+  "homepage": "https://github.com/sadministrator/campaign#readme",
+  "dependencies": {
+    "fs-extra": "^10.0.0",
+    "ganache-cli": "^6.12.2",
+    "mocha": "^9.0.3",
+    "solc": "^0.8.6",
+    "web3": "^1.4.0"
+  }
+}
