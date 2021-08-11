@@ -4,7 +4,7 @@
   "description": "\"A fundraising campaign Ethereum dApp which helps curb misuse of funds by allowing campaign contributors to vote on the disbursement requests created by the campaign creator.\" ",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
