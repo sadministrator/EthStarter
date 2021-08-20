@@ -3,7 +3,7 @@ import compiledFactory from './build/CampaignFactory.json';
 
 const factory = new web3.eth.Contract(
     JSON.parse(compiledFactory.interface),
-    process.env.FACTORY_ADDRESS
+    process.env.NEXT_PUBLIC_FACTORY_ADDRESS
 );
 
 export default factory;
