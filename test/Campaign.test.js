@@ -112,4 +112,22 @@ describe('Campaigns', () => {
         balance = parseFloat(balance);
         assert(balance > startBalance);
     });
+
+    it('does not increment approverCount if the same approver contributes more than once', async () => {
+        await campaign.methods.contribute().send({
+            from: accounts[0],
+            value: '1000'
+        });
+
+        const approverCount = await campaign.methods.approverCount().call();
+
+        await campaign.methods.contribute().send({
+            from: accounts[0],
+            value: '1000'
+        });
+
+        const approverCountEnd = await campaign.methods.approverCount().call();
+
+        assert(approverCount == approverCountEnd);
+    });
 });

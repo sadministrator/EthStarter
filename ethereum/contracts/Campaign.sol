@@ -25,7 +25,7 @@ contract Campaign {
 
     address public manager;
     uint public minimumContribution;
-    uint public approversCount;
+    uint public approverCount;
     mapping(address => bool) public approvers;
     Request[] public requests;
 
@@ -43,7 +43,7 @@ contract Campaign {
         require(msg.value >= minimumContribution);
         if(approvers[msg.sender] != true) {
             approvers[msg.sender] = true;
-            approversCount++;
+            approverCount++;
         }
     }
 
@@ -73,7 +73,7 @@ contract Campaign {
         Request storage request = requests[index];
         
         require(!request.complete);
-        require(request.approvalCount > approversCount/2);
+        require(request.approvalCount > approverCount/2);
         
         request.complete = true;
         request.recipient.transfer(request.value);
@@ -86,7 +86,7 @@ contract Campaign {
             minimumContribution,
             this.balance,
             requests.length,
-            approversCount,
+            approverCount,
             manager
         );
     }
