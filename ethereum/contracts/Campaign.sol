@@ -7,7 +7,7 @@ contract CampaignFactory {
         address campaign = new Campaign(msg.sender, minimum);
         campaigns.push(campaign);
     }
-    
+
     function getCampaigns() public view returns (address[]) {
         return campaigns;
     }
@@ -22,29 +22,31 @@ contract Campaign {
         uint approvalCount;
         mapping(address => bool) approvals;
     }
-    
+
     address public manager;
     uint public minimumContribution;
     uint public approversCount;
     mapping(address => bool) public approvers;
     Request[] public requests;
-    
+
     modifier restricted() {
         require(msg.sender == manager);
         _;
     }
-    
+
     function Campaign (address creator, uint minimum) public {
         manager = creator;
         minimumContribution = minimum;
     }
-    
+
     function contribute() public payable {
         require(msg.value >= minimumContribution);
-        approvers[msg.sender] = true;
-        approversCount++;
+        if(approvers[msg.sender] != true) {
+            approvers[msg.sender] = true;
+            approversCount++;
+        }
     }
-    
+
     function createRequest(string description, uint value, address recipient) public restricted {
         Request memory request = Request({
             description: description,
@@ -56,7 +58,7 @@ contract Campaign {
         
         requests.push(request);
     }
-    
+
     function approveRequest(uint index) public {
         Request storage request = requests[index];
         
@@ -66,7 +68,7 @@ contract Campaign {
         request.approvals[msg.sender] = true;
         request.approvalCount++;
     }
-    
+
     function finalizeRequest(uint index) public restricted {
         Request storage request = requests[index];
         
@@ -75,5 +77,21 @@ contract Campaign {
         
         request.complete = true;
         request.recipient.transfer(request.value);
+    }
+
+    function getMetrics() public view returns (
+        uint, uint, uint, uint, address
+    ) {
+        return (
+            minimumContribution,
+            this.balance,
+            requests.length,
+            approversCount,
+            manager
+        );
+    }
+
+    function getRequestsCount() public view returns (uint) {
+        return requests.length;
     }
 }
