@@ -7,8 +7,9 @@ if (typeof window !== 'undefined' && typeof window.web3 !== 'undefined') {
     web3 = new Web3(window.ethereum);
 } else {
     const provider = new Web3.providers.HttpProvider(
-        process.env.INFURA_ACCESS_POINT
+        process.env.INFURA_ENDPOINT
     );
+
     web3 = new Web3(provider);
 }
 
