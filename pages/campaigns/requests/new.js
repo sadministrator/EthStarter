@@ -5,7 +5,7 @@ import web3 from '../../../ethereum/web3';
 import Campaign from '../../../ethereum/campaign';
 import { Router, Link } from '../../../routes';
 
-class NewRequest extends Component {
+class RequestNew extends Component {
     state = {
         loading: false,
         error: '',
@@ -114,4 +114,4 @@ class NewRequest extends Component {
     }
 }
 
-export default NewRequest;
+export default RequestNew;
