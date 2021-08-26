@@ -14,12 +14,12 @@ class Contribute extends Component {
     onSubmit = async (event) => {
         event.preventDefault();
 
-        const campaign = Campaign(this.props.address);
-
         this.setState({
             loading: true,
             error: ''
         });
+
+        const campaign = Campaign(this.props.address);
 
         try {
             const accounts = await web3.eth.getAccounts();
