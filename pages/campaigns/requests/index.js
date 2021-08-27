@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import Campaign from '../../../ethereum/campaign';
 import Layout from '../../../components/Layout';
-import { Button, Card } from 'semantic-ui-react';
+import { Button, Card, Grid } from 'semantic-ui-react';
 import { Link } from '../../../routes';
+import RequestCard from '../../../components/RequestCard';
 
 class RequestIndex extends Component {
     static async getInitialProps(ctx) {
@@ -13,41 +14,58 @@ class RequestIndex extends Component {
                 return campaign.methods.requests(index).call();
             })
         );
+        const approverCount = await campaign.methods.approverCount().call();
 
         return {
             address: ctx.query.address,
-            requests: requests
+            requests,
+            approverCount
         }
     }
 
     renderCards() {
-        const { requests } = this.props;
+        const { address, requests, approverCount } = this.props;
 
-        const items = requests.map(request => {
-            return {
-                header: request.value,
-                meta: request.recipient,
-                description: request.description,
-                style: { overflowWrap: 'break-word' },
-                //flud: true
-            }
+        const cards = requests.map((request, index) => {
+            return (
+                <RequestCard
+                    key={index}
+                    address={address}
+                    index={index}
+                    request={request}
+                    approverCount={approverCount}
+                />
+            )
         });
 
-        return <Card.Group items={items} />
+        return (
+            <Card.Group>
+                {cards}
+            </Card.Group>
+        )
     }
 
     render() {
         return (
             <Layout>
-                {this.renderCards()}
-
-                <Link route={`/campaigns/${this.props.address}/new`}>
-                    <a>
-                        <Button primary>
-                            Create New Request
-                        </Button>
-                    </a>
+                <Link route={`/campaigns/${this.props.address}`}>
+                    <a>Back to Campaign</a>
                 </Link>
+                <Grid>
+                    <Grid.Column width={13}>
+                        {this.renderCards()}
+                    </Grid.Column>
+
+                    <Grid.Column width={3}>
+                        <Link route={`/campaigns/${this.props.address}/new`}>
+                            <a>
+                                <Button primary>
+                                    Create New Request
+                                </Button>
+                            </a>
+                        </Link>
+                    </Grid.Column>
+                </Grid>
             </Layout>
         )
     }
