@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Layout from '../components/Layout'
 import factory from '../ethereum/factory';
 import { Card, Button } from 'semantic-ui-react';
-import { Link, Router } from '../routes';
+import { Link } from '../routes';
 
 class CampaignIndex extends Component {
     static async getInitialProps() {
