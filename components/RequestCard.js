@@ -11,6 +11,7 @@ class RequestCard extends Component {
         isManager: true,
         isApprover: true,
         approveLoading: false,
+        denyLoading: false,
         approverError: '',
         finalizeLoading: false,
         managerError: false,
@@ -64,10 +65,29 @@ class RequestCard extends Component {
         this.setState({ approveLoading: false });
     };
 
-    denyRequest = (event) => {
+    denyRequest = async (event) => {
         event.preventDefault();
 
         this.setState({
+            denyLoading: true,
+            approverError: ''
+        });
+
+        const campaign = Campaign(this.props.address);
+
+        try {
+            const accounts = await web3.eth.getAccounts();
+
+            await campaign.methods.denyRequest(this.props.index).send({
+                from: accounts[0],
+                gas: '1000000'
+            });
+        } catch (err) {
+            this.setState({ approverError: err.message })
+        }
+
+        this.setState({
+            denyLoading: false,
             color: 'red',
             approverDecided: 'true'
         });
@@ -86,7 +106,7 @@ class RequestCard extends Component {
         try {
             const accounts = await web3.eth.getAccounts();
 
-            campaign.methods.finalizeRequest(this.props.index)
+            await campaign.methods.finalizeRequest(this.props.index)
                 .send({
                     from: accounts[0],
                     gas: '1000000'

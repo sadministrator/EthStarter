@@ -59,14 +59,28 @@ contract Campaign {
         requests.push(request);
     }
 
+// Any way to abuse approveRequest, denyRequest, or finalizeRequest after request is complete?
+// Would adding require(!request[index].complete) add unnecessary gas?
     function approveRequest(uint index) public {
-        Request storage request = requests[index];
-        
         require(approvers[msg.sender]);
+
+        // Is this assignment worth the gas?
+        Request storage request = requests[index];
         require(!request.approvals[msg.sender]);
         
         request.approvals[msg.sender] = true;
         request.approvalCount++;
+    }
+
+    function denyRequest(uint index) public {
+        // Is 'require(requests[index].approvals[msg.sender]);' better than the 'if' below?
+        // Does the 'if' result in the function call succeeding even if the 'if' fails? - Yes, useless tx.
+        // Is that preferrable behavior than it failing if it's already false?
+        // Which is better for gas? Security?
+        if(requests[index].approvals[msg.sender] == true) {
+            requests[index].approvals[msg.sender] = false;
+            requests[index].approvalCount--;
+        }
     }
 
     function finalizeRequest(uint index) public restricted {
