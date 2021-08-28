@@ -51,6 +51,7 @@ class RequestIndex extends Component {
                 <Link route={`/campaigns/${this.props.address}`}>
                     <a>Back to Campaign</a>
                 </Link>
+                <br /><br />
                 <Grid>
                     <Grid.Column width={13}>
                         {this.renderCards()}

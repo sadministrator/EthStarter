@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import web3 from '../ethereum/web3';
 import Campaign from '../ethereum/campaign';
-import { Form, Input, Button, Message } from 'semantic-ui-react'
+import { Form, Input, Button, Message, Segment } from 'semantic-ui-react'
 import { Router } from '../routes';
 
 class Contribute extends Component {
@@ -39,26 +39,30 @@ class Contribute extends Component {
 
     render() {
         return (
-            <Form onSubmit={this.onSubmit} error={!!this.state.error}>
-                <Form.Field>
-                    <label>Amount to Contribute</label>
-                    <Input
-                        value={this.state.contributionAmount}
-                        onChange={event => this.setState({
-                            contributionAmount: event.target.value
-                        })}
-                        placeholder='Ether'
-                        label='Ether'
-                        labelPosition='right'
-                    />
-                </Form.Field>
+            <Segment>
+                <Form onSubmit={this.onSubmit} error={!!this.state.error}>
+                    <Form.Field>
+                        <label>Amount to Contribute</label>
+                        <Input
+                            value={this.state.contributionAmount}
+                            onChange={event => this.setState({
+                                contributionAmount: event.target.value
+                            })}
+                            placeholder='Ether'
+                            label='Ether'
+                            labelPosition='right'
+                        />
+                    </Form.Field>
 
-                <Message error header='Oops!' content={this.state.error} />
+                    <Message error header='Oops!' content={this.state.error} />
 
-                <Button primary loading={this.state.loading}>
-                    Contribute!
-                </Button>
-            </Form>
+                    <Button
+                        primary
+                        loading={this.state.loading}>
+                        Contribute!
+                    </Button>
+                </Form>
+            </Segment>
         )
     }
 }

@@ -46,13 +46,15 @@ class ShowCampaign extends Component {
             {
                 header: manager,
                 meta: 'Address of Campaign Manager',
-                description: 'The manager created this campaign and can create requests to disburse the balance.',
+                description: `The manager created this campaign and can create requests to 
+                disburse its balance.`,
                 style: { overflowWrap: 'break-word' }
             },
             {
                 header: minimumContribution,
                 meta: 'Minimum Contribution (Wei)',
-                description: 'The minimum contribution required to become a contributer to this campaign and be able to approve spending requests.',
+                description: `The minimum contribution required to become a contributer to this 
+                    campaign and be able to approve spending requests.`,
                 style: { overflowWrap: 'break-word' }
             },
             {
