@@ -49,8 +49,9 @@ class Header extends Component {
                 </Link>
 
                 <Search
-                    style={{ width: '100%' }}
                     fluid
+                    className='item'
+                    style={{ width: '70%' }}
                     loading={this.state.loading}
                     onResultSelect={
                         (event, data) => {

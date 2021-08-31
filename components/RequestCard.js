@@ -8,7 +8,7 @@ import { Router } from '../routes';
 class RequestCard extends Component {
     state = {
         color: 'yellow',
-        isManager: true,
+        isManager: true, // will be changed once authentication has been implemented
         isApprover: true,
         approveLoading: false,
         denyLoading: false,
@@ -190,6 +190,7 @@ class RequestCard extends Component {
                 <Content>
                     <Meta textAlign='right'>
                         Request #{index + 1}
+                        {this.props.request.complete ? ' Completed' : ''}
                     </Meta>
 
                     <Description>
