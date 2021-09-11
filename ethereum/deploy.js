@@ -9,9 +9,9 @@ const web3 = new Web3(provider);
 const deploy = async () => {
     const accounts = await web3.eth.getAccounts();
 
-    const campaignFactory = await new web3.eth.Contract(JSON.parse(compiledFactory.interface))
-        .deploy({ data: compiledFactory.bytecode })
-        .send({ from: accounts[0], gas: '1000000' });
+    const campaignFactory = await new web3.eth.Contract(compiledFactory.abi)
+        .deploy({ data: compiledFactory.evm.bytecode.object })
+        .send({ from: accounts[0], gas: '3000000' });
 
     console.log('Contract deployed to', campaignFactory.options.address);
 };

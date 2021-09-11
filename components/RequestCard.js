@@ -144,6 +144,7 @@ class RequestCard extends Component {
                         color='red'
                         floated='right'
                         onClick={this.denyRequest}
+                        loading={this.state.denyLoading}
                     >
                         Deny
                     </Button>

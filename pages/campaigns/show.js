@@ -51,8 +51,8 @@ class ShowCampaign extends Component {
                 style: { overflowWrap: 'break-word' }
             },
             {
-                header: minimumContribution,
-                meta: 'Minimum Contribution (Wei)',
+                header: web3.utils.fromWei(minimumContribution, 'ether'),
+                meta: 'Minimum Contribution (Ether)',
                 description: `The minimum contribution required to become a contributer to this 
                     campaign and be able to approve spending requests.`,
                 style: { overflowWrap: 'break-word' }

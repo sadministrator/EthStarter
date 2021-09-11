@@ -1,14 +1,15 @@
-pragma solidity ^0.4.17;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.7;
 
 contract CampaignFactory {
     address[] campaigns;
     
     function createCampaign(uint minimum) public payable {
-        address campaign = new Campaign(msg.sender, minimum);
+        address campaign = address(new Campaign(msg.sender, minimum));
         campaigns.push(campaign);
     }
 
-    function getCampaigns() public view returns (address[]) {
+    function getCampaigns() public view returns (address[] memory) {
         return campaigns;
     }
 }
@@ -27,56 +28,66 @@ contract Campaign {
     uint public minimumContribution;
     uint public approverCount;
     mapping(address => bool) public approvers;
-    Request[] public requests;
+    mapping(uint => Request) public requests;
+    uint public requestCount;
 
     modifier restricted() {
-        require(msg.sender == manager);
+        require(
+            msg.sender == manager,
+            "Only manager can make this transaction."
+        );
         _;
     }
 
-    function Campaign (address creator, uint minimum) public {
+    constructor (address creator, uint minimum) {
         manager = creator;
         minimumContribution = minimum;
+        approverCount = 0;
+        requestCount = 0;
     }
 
     function contribute() public payable {
-        require(msg.value >= minimumContribution);
+        require(
+            msg.value >= minimumContribution,
+            "Contribution amount is less than the minimum."
+        );
+
         if(approvers[msg.sender] != true) {
             approvers[msg.sender] = true;
             approverCount++;
         }
     }
 
-    function createRequest(string description, uint value, address recipient) public restricted {
-        Request memory request = Request({
-            description: description,
-            value: value,
-            recipient: recipient,
-            complete: false,
-            approvalCount: 0
-        });
-        
-        requests.push(request);
+    function createRequest(string calldata description, uint value, address recipient) external restricted {
+        Request storage request = requests[requestCount++];
+        request.description = description;
+        request.value = value;
+        request.recipient = recipient;
+        request.complete = false;
+        request.approvalCount = 0;
     }
 
-// Any way to abuse approveRequest, denyRequest, or finalizeRequest after request is complete?
-// Would adding require(!request[index].complete) add unnecessary gas?
     function approveRequest(uint index) public {
-        require(approvers[msg.sender]);
+        require(
+            approvers[msg.sender],
+            "Only contributors can approve requests."
+        );
 
-        // Is this assignment worth the gas?
         Request storage request = requests[index];
-        require(!request.approvals[msg.sender]);
+        require(
+            !request.complete,
+            "This request has already been completed."
+        );
+        require(
+            !request.approvals[msg.sender],
+            "You have already approved this request"
+        );
         
         request.approvals[msg.sender] = true;
         request.approvalCount++;
     }
 
     function denyRequest(uint index) public {
-        // Is 'require(requests[index].approvals[msg.sender]);' better than the 'if' below?
-        // Does the 'if' result in the function call succeeding even if the 'if' fails? - Yes, useless tx.
-        // Is that preferrable behavior than it failing if it's already false?
-        // Which is better for gas? Security?
         if(requests[index].approvals[msg.sender] == true) {
             requests[index].approvals[msg.sender] = false;
             requests[index].approvalCount--;
@@ -86,11 +97,17 @@ contract Campaign {
     function finalizeRequest(uint index) public restricted {
         Request storage request = requests[index];
         
-        require(!request.complete);
-        require(request.approvalCount > approverCount/2);
+        require(
+            !request.complete,
+            "This request is already finalized."
+        );
+        require(
+            request.approvalCount > approverCount/2,
+            "This request has not yet reached required majority."
+        );
         
         request.complete = true;
-        request.recipient.transfer(request.value);
+        payable(request.recipient).transfer(request.value);
     }
 
     function getMetrics() public view returns (
@@ -98,14 +115,10 @@ contract Campaign {
     ) {
         return (
             minimumContribution,
-            this.balance,
-            requests.length,
+            address(this).balance,
+            requestCount,
             approverCount,
             manager
         );
-    }
-
-    function getRequestsCount() public view returns (uint) {
-        return requests.length;
     }
 }

@@ -8,7 +8,7 @@ import RequestCard from '../../../components/RequestCard';
 class RequestIndex extends Component {
     static async getInitialProps(ctx) {
         const campaign = Campaign(ctx.query.address);
-        const requestCount = await campaign.methods.getRequestsCount().call();
+        const requestCount = await campaign.methods.requestCount().call();
         const requests = await Promise.all(
             Array(parseInt(requestCount)).fill().map((element, index) => {
                 return campaign.methods.requests(index).call();

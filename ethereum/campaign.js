@@ -3,7 +3,7 @@ import compiledCampaign from './build/Campaign.json';
 
 const campaign = (address) => {
     return new web3.eth.Contract(
-        JSON.parse(compiledCampaign.interface),
+        compiledCampaign.abi,
         address
     );
 }
