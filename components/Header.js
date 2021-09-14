@@ -1,80 +1,77 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, Search, Input } from 'semantic-ui-react';
-import { Router, Link } from '../routes';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+
 import factory from '../ethereum/factory'
 
-class Header extends Component {
-    componentDidMount = async () => {
-        let campaigns = await factory.methods.getCampaigns().call();
-        campaigns = campaigns.map(campaign => {
-            return {
-                title: campaign
-            };
-        });
+function Header() {
+    const [loading, setLoading] = useState(false);
+    const [results, setResults] = useState([]);
+    const [value, setValue] = useState('');
+    const [campaigns, setCampaigns] = useState([]);
 
-        this.setState({
-            campaigns
-        });
-    }
+    const router = useRouter();
 
-    state = {
-        loading: false,
-        results: [],
-        value: '',
-        campaigns: []
-    }
+    useEffect(() => {
+        async function fetchCampaigns() {
+            const campaignsArray = await factory.methods.getCampaigns().call();
+            const campaignsObjects = campaignsArray.map(campaign => {
+                return {
+                    title: campaign
+                };
+            });
+            setCampaigns(campaignsObjects);
+        }
+        fetchCampaigns();
+    }, []);
 
-    searchChange = (event) => {
+    const searchChange = (event) => {
         event.preventDefault();
 
-        this.setState({
-            value: event.target.value,
-            loading: true
-        });
+        setValue(event.target.value);
+        setLoading(true);
 
-        const results = this.state.campaigns
-            .filter(campaign => campaign.title.match(event.target.value));
+        const searchResults = campaigns.filter(
+            campaign => campaign.title.match(event.target.value)
+        );
 
-        this.setState({
-            results,
-            loading: false
-        });
+        setResults(searchResults);
+        setLoading(false);
     };
 
-    render() {
-        return (
-            <Menu style={{ marginTop: '12px' }}>
-                <Link route='/'>
-                    <a className='item'>EthStarter</a>
+    return (
+        <Menu style={{ marginTop: '12px' }}>
+            <Link href='/'>
+                <a className='item'>EthStarter</a>
+            </Link>
+
+            <Search
+                fluid
+                className='item'
+                style={{ width: '70%' }}
+                loading={loading}
+                onResultSelect={
+                    (event, data) => {
+                        router.push(`/campaigns/${data.result.title}`);
+                    }
+                }
+                onSearchChange={searchChange}
+                results={results}
+                value={value}
+            />
+
+            <Menu.Menu position='right'>
+                <Link href='/'>
+                    <a className='item'>Campaigns</a>
                 </Link>
 
-                <Search
-                    fluid
-                    className='item'
-                    style={{ width: '70%' }}
-                    loading={this.state.loading}
-                    onResultSelect={
-                        (event, data) => {
-                            Router.pushRoute(`/campaigns/${data.result.title}`);
-                        }
-                    }
-                    onSearchChange={this.searchChange}
-                    results={this.state.results}
-                    value={this.state.balue}
-                />
-
-                <Menu.Menu position='right'>
-                    <Link route='/'>
-                        <a className='item'>Campaigns</a>
-                    </Link>
-
-                    <Link route='/campaigns/new'>
-                        <a className='item'>+</a>
-                    </Link>
-                </Menu.Menu>
-            </Menu>
-        )
-    }
+                <Link href='/campaigns/new'>
+                    <a className='item'>+</a>
+                </Link>
+            </Menu.Menu>
+        </Menu>
+    );
 }
 
 export default Header;

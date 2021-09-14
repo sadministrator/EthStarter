@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
+import { Card, Button } from 'semantic-ui-react';
+import Link from 'next/link';
+
 import Layout from '../components/Layout'
 import factory from '../ethereum/factory';
-import { Card, Button } from 'semantic-ui-react';
-import { Link } from '../routes';
 
 class CampaignIndex extends Component {
     static async getInitialProps() {
@@ -15,7 +16,7 @@ class CampaignIndex extends Component {
             return {
                 header: address,
                 description: (
-                    <Link route={`/campaigns/${address}`}>
+                    <Link href={`/campaigns/${address}`}>
                         <a>View Campaign</a>
                     </Link>
                 ),
@@ -31,7 +32,7 @@ class CampaignIndex extends Component {
         return (
             <Layout>
                 <h3>Open Campaigns</h3>
-                <Link route='/campaigns/new'>
+                <Link href='/campaigns/new'>
                     <a>
                         <Button
                             floated='right'

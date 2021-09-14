@@ -1,26 +1,15 @@
-import React, { Component } from 'react';
-import Layout from '../../components/Layout'
-import Campaign from '../../ethereum/campaign';
+import React from 'react';
 import { Card, Grid, Button } from 'semantic-ui-react';
-import web3 from '../../ethereum/web3';
-import Contribute from '../../components/Contribute';
-import { Link } from '../../routes';
+import Link from 'next/link';
 
-class ShowCampaign extends Component {
-    static async getInitialProps(ctx) {
-        const campaign = Campaign(ctx.query.address);
-        const metrics = await campaign.methods.getMetrics().call();
-        return {
-            address: ctx.query.address,
-            minimumContribution: metrics[0],
-            balance: metrics[1],
-            numRequests: metrics[2],
-            numApprovers: metrics[3],
-            manager: metrics[4]
-        };
-    }
+import factory from '../../../ethereum/factory';
+import Campaign from '../../../ethereum/campaign';
+import web3 from '../../../ethereum/web3';
+import Layout from '../../../components/Layout'
+import Contribute from '../../../components/Contribute';
 
-    renderCards() {
+function ShowCampaign(props) {
+    const renderCards = () => {
         const {
             address,
             manager,
@@ -28,7 +17,7 @@ class ShowCampaign extends Component {
             balance,
             numRequests,
             numApprovers
-        } = this.props;
+        } = props;
 
         const items = [
             {
@@ -72,37 +61,63 @@ class ShowCampaign extends Component {
         ];
 
         return <Card.Group items={items} />;
-    }
+    };
 
-    render() {
-        return (
-            <Layout>
-                <Grid>
-                    <Grid.Row>
-                        <Grid.Column width={10}>
-                            {this.renderCards()}
-                        </Grid.Column>
+    return (
+        <Layout>
+            <Grid>
+                <Grid.Row>
+                    <Grid.Column width={10}>
+                        {renderCards()}
+                    </Grid.Column>
 
-                        <Grid.Column width={6}>
-                            <Contribute address={this.props.address} />
-                        </Grid.Column>
-                    </Grid.Row>
+                    <Grid.Column width={6}>
+                        <Contribute address={props.address} />
+                    </Grid.Column>
+                </Grid.Row>
 
-                    <Grid.Row>
-                        <Grid.Column>
-                            <Link route={`/campaigns/${this.props.address}/requests`}>
-                                <a>
-                                    <Button primary>
-                                        View Requests
-                                    </Button>
-                                </a>
-                            </Link>
-                        </Grid.Column>
-                    </Grid.Row>
-                </Grid>
-            </Layout>
-        );
-    }
+                <Grid.Row>
+                    <Grid.Column>
+                        <Link href={`/campaigns/${props.address}/requests`}>
+                            <a>
+                                <Button primary>
+                                    View Requests
+                                </Button>
+                            </a>
+                        </Link>
+                    </Grid.Column>
+                </Grid.Row>
+            </Grid>
+        </Layout>
+    );
+}
+
+export async function getStaticPaths() {
+    const campaigns = await factory.methods.getCampaigns().call();
+
+    const paths = campaigns.map(campaign => ({
+        params: { address: campaign },
+    }));
+
+    return { paths, fallback: false };
+}
+
+export async function getStaticProps(context) {
+    const { address } = context.params;
+    const campaign = Campaign(address);
+    const metrics = await campaign.methods.getMetrics().call();
+
+    return {
+        props: {
+            address: address,
+            minimumContribution: metrics[0],
+            balance: metrics[1],
+            numRequests: metrics[2],
+            numApprovers: metrics[3],
+            manager: metrics[4]
+        },
+        revalidate: 14,
+    };
 }
 
 export default ShowCampaign;

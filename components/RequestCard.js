@@ -1,233 +1,217 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, Message } from 'semantic-ui-react';
+import { useRouter } from 'next/router';
+
 import Campaign from '../ethereum/campaign';
 import web3 from '../ethereum/web3';
-import { Router } from '../routes';
 
+function RequestCard(props) {
+    const [color, setColor] = useState('yellow');
+    const [isManager, setIsManager] = useState(true);
+    const [isApprover, setIsApprover] = useState(true);
+    const [approveLoading, setApproveLoading] = useState(false);
+    const [denyLoading, setDenyLoading] = useState(false);
+    const [approverError, setApproverError] = useState('');
+    const [finalizeLoading,setFinalizeLoading] = useState(false);
+    const [managerError, setManagerError] = useState(false);
+    const [approverDecided, setApproverDecided] = useState(false);
+    const [majorityApproval, setMajorityApproval] = useState(false);
 
-class RequestCard extends Component {
-    state = {
-        color: 'yellow',
-        isManager: true, // will be changed once authentication has been implemented
-        isApprover: true,
-        approveLoading: false,
-        denyLoading: false,
-        approverError: '',
-        finalizeLoading: false,
-        managerError: false,
-        approverDecided: false,
-        majorityApproval: false
-    }
+    const router = useRouter();
+    const { index, request, approverCount } = props;
 
-    constructor(props) {
-        super(props);
-
-        const { request, approverCount } = this.props;
-
+    useEffect(() => {
         if (request.complete) {
-            this.state.color = 'purple'
+            setColor('purple');
         }
 
         if (request.approvalCount / approverCount >= .5) {
-            this.state.majorityApproval = true;
+            setMajorityApproval(true);
         }
-    }
+    }, [
+        request.complete,
+        request.approvalCount,
+        approverCount
+    ]);
 
-    approveRequest = async (event) => {
+    const approveRequest = async (event) => {
         event.preventDefault();
 
-        this.setState({
-            approveLoading: true,
-            approverError: ''
-        });
+        setApproveLoading(true);
+        setApproverError('');
 
-        const campaign = Campaign(this.props.address);
+        const campaign = Campaign(address);
 
         try {
             const accounts = await web3.eth.getAccounts();
 
-            await campaign.methods.approveRequest(this.props.index)
+            await campaign.methods.approveRequest(index)
                 .send({
                     from: accounts[0],
                     gas: '1000000'
                 });
 
-            this.setState({
-                color: 'green',
-                approverDecided: true
-            });
+            setColor('green');
+            setApproverDecided(true);
 
-            Router.replaceRoute(`/campaigns/${this.props.address}/requests`);
+            router.replace(`/campaigns/${address}/requests`);
         } catch (err) {
-            this.setState({ approverError: err.message });
+            setApproverError(err.message);
         }
 
-        this.setState({ approveLoading: false });
+        setApproveLoading(false);
     };
 
-    denyRequest = async (event) => {
+    const denyRequest = async (event) => {
         event.preventDefault();
 
-        this.setState({
-            denyLoading: true,
-            approverError: ''
-        });
+        setDenyLoading(true);
+        setApproverError('');
 
-        const campaign = Campaign(this.props.address);
+        const campaign = Campaign(address);
 
         try {
             const accounts = await web3.eth.getAccounts();
 
-            await campaign.methods.denyRequest(this.props.index).send({
+            await campaign.methods.denyRequest(index).send({
                 from: accounts[0],
                 gas: '1000000'
             });
         } catch (err) {
-            this.setState({ approverError: err.message })
+            setApproverError(err.message);
         }
 
-        this.setState({
-            denyLoading: false,
-            color: 'red',
-            approverDecided: 'true'
-        });
+        setDenyLoading(false);
+        setColor('red');
+        setApproverDecided('true');
     }
 
-    finalizeRequest = async (event) => {
+    const finalizeRequest = async (event) => {
         event.preventDefault();
 
-        this.setState({
-            finalizeLoading: true,
-            managerError: ''
-        });
+        setFinalizeLoading(true);
+        setManagerError('');
 
-        const campaign = Campaign(this.props.address);
+        const campaign = Campaign(address);
 
         try {
             const accounts = await web3.eth.getAccounts();
 
-            await campaign.methods.finalizeRequest(this.props.index)
+            await campaign.methods.finalizeRequest(index)
                 .send({
                     from: accounts[0],
                     gas: '1000000'
                 });
-            this.setState({ color: 'purple' });
+            setColor('purple');
 
-            Router.replaceRoute(`/campaigns/${this.props.address}/requests`);
+            router.replace(`/campaigns/${address}/requests`);
         } catch (err) {
-            this.setState({ managerError: err.message });
+            setManagerError(err.message);
         }
-        this.setState({ finalizeLoading: false });
+        setFinalizeLoading(false);
     }
 
-    render() {
-        const { index, request, approverCount } = this.props;
-        const { Content, Header, Description, Meta } = Card;
+    const { Content, Header, Description, Meta } = Card;
 
-        let approverButtons, managerButtons;
-        if (this.state.isApprover &&
-            !this.props.request.complete &&
-            !this.state.approverDecided) {
-            approverButtons =
-                <Content>
-                    <Button
-                        basic
-                        color='green'
-                        onClick={this.approveRequest}
-                        loading={this.state.approveLoading}
-                    >
-                        Approve
-                    </Button>
+    let approverButtons, managerButtons;
+    if (isApprover && !request.complete && !approverDecided) {
+        approverButtons =
+            <Content>
+                <Button
+                    basic
+                    color='green'
+                    onClick={approveRequest}
+                    loading={approveLoading}
+                >
+                    Approve
+                </Button>
 
-                    <Button
-                        basic
-                        color='red'
-                        floated='right'
-                        onClick={this.denyRequest}
-                        loading={this.state.denyLoading}
-                    >
-                        Deny
-                    </Button>
+                <Button
+                    basic
+                    color='red'
+                    floated='right'
+                    onClick={denyRequest}
+                    loading={denyLoading}
+                >
+                    Deny
+                </Button>
 
-                    <Message
-                        error
-                        header='Oops!'
-                        content={this.state.approverError}
-                        hidden={!this.state.approverError}
-                    />
-                </Content>;
-        }
-
-        if (this.state.isManager &&
-            !this.props.request.complete &&
-            this.state.majorityApproval) {
-            managerButtons =
-                <Content>
-                    <Button
-                        basic
-                        fluid
-                        color='purple'
-                        onClick={this.finalizeRequest}
-                        loading={this.state.finalizeLoading}
-                    >
-                        Finalize Request
-                    </Button>
-
-                    <Message
-                        error
-                        header='Oops!'
-                        content={this.state.managerError}
-                        hidden={!this.state.managerError}
-                    />
-                </Content>
-        }
-
-        return (
-            <Card
-                key={index}
-                style={{ overflowWrap: 'break-word' }}
-                color={this.state.color}
-            >
-                <Content>
-                    <Meta textAlign='right'>
-                        Request #{index + 1}
-                        {this.props.request.complete ? ' Completed' : ''}
-                    </Meta>
-
-                    <Description>
-                        Request Amount:
-                    </Description>
-
-                    <Header>
-                        {web3.utils.fromWei(request.value, 'ether')} Eth
-                    </Header>
-
-                    <Description >
-                        Recipient Address:<br />
-                        <a
-                            href={`https://etherscan.io/address/${request.recipient}`}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                        >
-                            {request.recipient}
-                        </a>
-                    </Description><br />
-
-                    <Description>
-                        Description:<br />
-                        <b>{request.description}</b>
-                    </Description><br />
-
-                    <Description>
-                        Approvals:<br />
-                        <b>{request.approvalCount}/{approverCount}</b>
-                    </Description>
-                </Content>
-                {approverButtons}
-                {managerButtons}
-            </Card>
-        )
+                <Message
+                    error
+                    header='Oops!'
+                    content={approverError}
+                    hidden={!approverError}
+                />
+            </Content>;
     }
+
+    if (isManager && !request.complete && majorityApproval) {
+        managerButtons =
+            <Content>
+                <Button
+                    basic
+                    fluid
+                    color='purple'
+                    onClick={finalizeRequest}
+                    loading={finalizeLoading}
+                >
+                    Finalize Request
+                </Button>
+
+                <Message
+                    error
+                    header='Oops!'
+                    content={managerError}
+                    hidden={!managerError}
+                />
+            </Content>
+    }
+
+    return (
+        <Card
+            key={index}
+            style={{ overflowWrap: 'break-word' }}
+            color={color}
+        >
+            <Content>
+                <Meta textAlign='right'>
+                    Request #{index + 1}
+                    {request.complete ? ' Completed' : ''}
+                </Meta>
+
+                <Description>
+                    Request Amount:
+                </Description>
+
+                <Header>
+                    {web3.utils.fromWei(request.value, 'ether')} Eth
+                </Header>
+
+                <Description >
+                    Recipient Address:<br />
+                    <a
+                        href={`https://etherscan.io/address/${request.recipient}`}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                    >
+                        {request.recipient}
+                    </a>
+                </Description><br />
+
+                <Description>
+                    Description:<br />
+                    <b>{request.description}</b>
+                </Description><br />
+
+                <Description>
+                    Approvals:<br />
+                    <b>{request.approvalCount}/{approverCount}</b>
+                </Description>
+            </Content>
+            {approverButtons}
+            {managerButtons}
+        </Card>
+    );
 }
 
 export default RequestCard;
