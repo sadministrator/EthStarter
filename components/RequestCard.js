@@ -7,8 +7,8 @@ import web3 from '../ethereum/web3';
 
 function RequestCard(props) {
     const [color, setColor] = useState('yellow');
-    const [isManager, setIsManager] = useState(true);
-    const [isApprover, setIsApprover] = useState(true);
+    const [isManager, setIsManager] = useState(false);
+    const [isApprover, setIsApprover] = useState(false);
     const [approveLoading, setApproveLoading] = useState(false);
     const [denyLoading, setDenyLoading] = useState(false);
     const [approverError, setApproverError] = useState('');
@@ -18,7 +18,20 @@ function RequestCard(props) {
     const [majorityApproval, setMajorityApproval] = useState(false);
 
     const router = useRouter();
-    const { index, request, approverCount } = props;
+    const { address, index, request, approverCount } = props;
+
+    useEffect(() => {
+        async function getRoles() {
+            const accounts = await web3.eth.getAccounts();
+            const campaign = Campaign(address);
+            const manager =  await campaign.methods.manager().call();
+            const isApprover = await campaign.methods.approvers(accounts[0]).call();
+
+            setIsManager(accounts[0] === manager);
+            setIsApprover(isApprover);
+        }
+        getRoles();
+    }, [address]);
 
     useEffect(() => {
         if (request.complete) {
@@ -36,6 +49,13 @@ function RequestCard(props) {
 
     const approveRequest = async (event) => {
         event.preventDefault();
+
+        if(!isApprover) {
+            alert(
+                'You must first contribute to a campaign before you can vote on spending requests.'
+            );
+            return;
+        }
 
         setApproveLoading(true);
         setApproverError('');
@@ -65,6 +85,13 @@ function RequestCard(props) {
     const denyRequest = async (event) => {
         event.preventDefault();
 
+        if(!isApprover) {
+            alert(
+                'You must first contribute to a campaign before you can vote on spending requests.'
+            );
+            return;
+        }
+
         setDenyLoading(true);
         setApproverError('');
 
@@ -88,6 +115,13 @@ function RequestCard(props) {
 
     const finalizeRequest = async (event) => {
         event.preventDefault();
+
+        if(!isManager) {
+            alert(
+                'You must be the campaign creator to approve spending requests.'
+            );
+            return;
+        }
 
         setFinalizeLoading(true);
         setManagerError('');
@@ -114,7 +148,7 @@ function RequestCard(props) {
     const { Content, Header, Description, Meta } = Card;
 
     let approverButtons, managerButtons;
-    if (isApprover && !request.complete && !approverDecided) {
+    if (!request.complete && !approverDecided) {
         approverButtons =
             <Content>
                 <Button
@@ -145,7 +179,7 @@ function RequestCard(props) {
             </Content>;
     }
 
-    if (isManager && !request.complete && majorityApproval) {
+    if (!request.complete && majorityApproval) {
         managerButtons =
             <Content>
                 <Button
