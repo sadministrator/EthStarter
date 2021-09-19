@@ -4,7 +4,7 @@ import Campaign from '../ethereum/campaign';
 import { Form, Input, Button, Message, Segment } from 'semantic-ui-react'
 import { useRouter } from 'next/router';
 
-function Contribute() {
+function Contribute(props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [contributionAmount, setContributionAmount] = useState('');
@@ -17,17 +17,17 @@ function Contribute() {
         setLoading(true);
         setError('');
 
-        const campaign = Campaign(this.props.address);
+        const campaign = Campaign(props.address);
 
         try {
             const accounts = await web3.eth.getAccounts();
 
             await campaign.methods.contribute().send({
                 from: accounts[0],
-                value: web3.utils.toWei(this.state.contributionAmount, 'ether')
+                value: web3.utils.toWei(contributionAmount, 'ether')
             });
 
-            router.replace(`/campaigns/${this.props.address}`);
+            router.replace(`/campaigns/${props.address}`);
         } catch (err) {
             setError(err.msg);
         }

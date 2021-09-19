@@ -39,6 +39,22 @@ contract Campaign {
         _;
     }
 
+    modifier approver() {
+        require(
+            approvers[msg.sender],
+            "Only contributors can approve requests."
+        );
+        _;
+    }
+
+    modifier notFinalized(uint index) {
+        require(
+            !requests[index].complete,
+            "This request has already been completed."
+        );
+        _;
+    }
+
     constructor (address creator, uint minimum) {
         manager = creator;
         minimumContribution = minimum;
@@ -67,45 +83,40 @@ contract Campaign {
         request.approvalCount = 0;
     }
 
-    function approveRequest(uint index) public {
-        require(
-            approvers[msg.sender],
-            "Only contributors can approve requests."
-        );
-
+    function approveRequest(uint index) public approver notFinalized(index) {
         Request storage request = requests[index];
-        require(
-            !request.complete,
-            "This request has already been completed."
-        );
+
         require(
             !request.approvals[msg.sender],
-            "You have already approved this request"
+            "You have already approved this request."
         );
-        
+
         request.approvals[msg.sender] = true;
         request.approvalCount++;
     }
 
-    function denyRequest(uint index) public {
+    function revokeApproval(uint index) public approver notFinalized(index) {
+        Request storage request = requests[index];
+
+        require(
+            request.approvals[msg.sender],
+            "You haven't approved this request."
+        );
+
         if(requests[index].approvals[msg.sender] == true) {
             requests[index].approvals[msg.sender] = false;
             requests[index].approvalCount--;
         }
     }
 
-    function finalizeRequest(uint index) public restricted {
+    function finalizeRequest(uint index) public restricted notFinalized(index) {
         Request storage request = requests[index];
-        
-        require(
-            !request.complete,
-            "This request is already finalized."
-        );
+
         require(
             request.approvalCount > approverCount/2,
             "This request has not yet reached required majority."
         );
-        
+
         request.complete = true;
         payable(request.recipient).transfer(request.value);
     }
@@ -120,5 +131,9 @@ contract Campaign {
             approverCount,
             manager
         );
+    }
+
+    function isApprover(uint index, address person) public view returns (bool) {
+        return requests[index].approvals[person];
     }
 }
