@@ -9,16 +9,16 @@ import Layout from '../../../components/Layout'
 import Contribute from '../../../components/Contribute';
 
 function ShowCampaign(props) {
-    const renderCards = () => {
-        const {
-            address,
-            manager,
-            minimumContribution,
-            balance,
-            numRequests,
-            numApprovers
-        } = props;
+    const {
+        address,
+        manager,
+        minimumContribution,
+        balance,
+        numRequests,
+        numApprovers
+    } = props;
 
+    const renderCards = () => {
         const items = [
             {
                 header: web3.utils.fromWei(balance, 'ether'),
@@ -72,13 +72,13 @@ function ShowCampaign(props) {
                     </Grid.Column>
 
                     <Grid.Column width={6}>
-                        <Contribute address={props.address} />
+                        <Contribute address={address} />
                     </Grid.Column>
                 </Grid.Row>
 
                 <Grid.Row>
                     <Grid.Column>
-                        <Link href={`/campaigns/${props.address}/requests`}>
+                        <Link href={`/campaigns/${address}/requests`}>
                             <a>
                                 <Button primary>
                                     View Requests

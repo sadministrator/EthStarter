@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '../../../../components/Layout';
 import { Form, Input, Button, Message, Grid, Segment } from 'semantic-ui-react';
 import web3 from '../../../../ethereum/web3';
@@ -12,12 +12,30 @@ function RequestNew() {
     const [description, setDescription] = useState('');
     const [value, setValue] = useState('');
     const [recipient, setRecipient] = useState('');
+    const [isManager, setIsManager] = useState(false);
 
     const router = useRouter();
     const { address } = router.query;
 
+    useEffect(() => {
+        async function fetchRoles() {
+            const accounts = await web3.eth.getAccounts();
+            const campaign = Campaign(address);
+            const manager = await campaign.methods.manager().call();
+            setIsManager(accounts[0] === manager);
+        }
+        fetchRoles();
+    });
+
     const onSubmit = async (event) => {
         event.preventDefault();
+
+        if(!isManager) {
+            alert(
+                'You must be the campaign manager to create new spending requests.'
+            );
+            return;
+        }
 
         setLoading(true);
         setError('');
@@ -42,7 +60,7 @@ function RequestNew() {
         } catch (err) {
             setError(err.message);
         }
-        setloading(false);
+        setLoading(false);
     }
 
     return (
@@ -50,9 +68,9 @@ function RequestNew() {
             <Link href={`/campaigns/${address}/requests`}>
                 <a>Back to Requests</a>
             </Link>
-            <Segment>
+            <Segment style={{width: '70%'}}>
                 <Grid>
-                    <Grid.Column width={12}>
+                    <Grid.Column>
                         <h3>Create a Request</h3>
                         <Form
                             onSubmit={onSubmit}
@@ -90,7 +108,7 @@ function RequestNew() {
 
                             <Message error header='Oops!' content={error} />
 
-                            <Button primary loading={loading}>
+                            <Button primary loading={loading} floated='right'>
                                 Submit Request
                             </Button>
                         </Form>

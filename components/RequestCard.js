@@ -9,13 +9,12 @@ function RequestCard(props) {
     const [color, setColor] = useState('yellow');
     const [isManager, setIsManager] = useState(false);
     const [isApprover, setIsApprover] = useState(false);
-    const [approveLoading, setApproveLoading] = useState(false);
-    const [denyLoading, setDenyLoading] = useState(false);
+    const [approverLoading, setApproverLoading] = useState(false);
     const [approverError, setApproverError] = useState('');
     const [finalizeLoading,setFinalizeLoading] = useState(false);
     const [managerError, setManagerError] = useState(false);
-    const [approverDecided, setApproverDecided] = useState(false);
     const [majorityApproval, setMajorityApproval] = useState(false);
+    const [hasApproved, setHasApproved] = useState(false);
 
     const router = useRouter();
     const { address, index, request, approverCount } = props;
@@ -26,16 +25,21 @@ function RequestCard(props) {
             const campaign = Campaign(address);
             const manager =  await campaign.methods.manager().call();
             const isApprover = await campaign.methods.approvers(accounts[0]).call();
+            const hasApproved = await campaign.methods.isApprover(index, accounts[0]).call();
 
             setIsManager(accounts[0] === manager);
             setIsApprover(isApprover);
+            setHasApproved(hasApproved);
         }
+
         getRoles();
-    }, [address]);
+    });
 
     useEffect(() => {
         if (request.complete) {
             setColor('purple');
+        } else if (hasApproved) {
+            setColor('green');
         }
 
         if (request.approvalCount / approverCount >= .5) {
@@ -44,20 +48,14 @@ function RequestCard(props) {
     }, [
         request.complete,
         request.approvalCount,
-        approverCount
+        approverCount,
+        hasApproved
     ]);
 
     const approveRequest = async (event) => {
         event.preventDefault();
 
-        if(!isApprover) {
-            alert(
-                'You must first contribute to a campaign before you can vote on spending requests.'
-            );
-            return;
-        }
-
-        setApproveLoading(true);
+        setApproverLoading(true);
         setApproverError('');
 
         const campaign = Campaign(address);
@@ -71,28 +69,19 @@ function RequestCard(props) {
                     gas: '1000000'
                 });
 
-            setColor('green');
-            setApproverDecided(true);
-
             router.replace(`/campaigns/${address}/requests`);
         } catch (err) {
             setApproverError(err.message);
         }
 
-        setApproveLoading(false);
+        setApproverLoading(false);
+        setColor('green');
     };
 
-    const denyRequest = async (event) => {
+    const revokeApproval = async (event) => {
         event.preventDefault();
 
-        if(!isApprover) {
-            alert(
-                'You must first contribute to a campaign before you can vote on spending requests.'
-            );
-            return;
-        }
-
-        setDenyLoading(true);
+        setApproverLoading(true);
         setApproverError('');
 
         const campaign = Campaign(address);
@@ -100,7 +89,7 @@ function RequestCard(props) {
         try {
             const accounts = await web3.eth.getAccounts();
 
-            await campaign.methods.denyRequest(index).send({
+            await campaign.methods.revokeApproval(index).send({
                 from: accounts[0],
                 gas: '1000000'
             });
@@ -108,20 +97,12 @@ function RequestCard(props) {
             setApproverError(err.message);
         }
 
-        setDenyLoading(false);
+        setApproverLoading(false);
         setColor('red');
-        setApproverDecided('true');
     }
 
     const finalizeRequest = async (event) => {
         event.preventDefault();
-
-        if(!isManager) {
-            alert(
-                'You must be the campaign creator to approve spending requests.'
-            );
-            return;
-        }
 
         setFinalizeLoading(true);
         setManagerError('');
@@ -136,51 +117,53 @@ function RequestCard(props) {
                     from: accounts[0],
                     gas: '1000000'
                 });
-            setColor('purple');
 
             router.replace(`/campaigns/${address}/requests`);
         } catch (err) {
             setManagerError(err.message);
         }
         setFinalizeLoading(false);
+        setColor('purple');
     }
 
     const { Content, Header, Description, Meta } = Card;
 
-    let approverButtons, managerButtons;
-    if (!request.complete && !approverDecided) {
-        approverButtons =
-            <Content>
-                <Button
-                    basic
-                    color='green'
-                    onClick={approveRequest}
-                    loading={approveLoading}
-                >
-                    Approve
-                </Button>
+    let approverButton, buttonColor, buttonText, buttonHandler;
+    if (isApprover && !request.complete) {
+        if(hasApproved) {
+            buttonColor = 'red';
+            buttonText = 'Revoke Approval';
+            buttonHandler = revokeApproval;
+        } else {
+            buttonColor = 'green';
+            buttonText = 'Approve Request';
+            buttonHandler = approveRequest;
+        }
 
-                <Button
-                    basic
-                    color='red'
-                    floated='right'
-                    onClick={denyRequest}
-                    loading={denyLoading}
-                >
-                    Deny
-                </Button>
+        approverButton =
+                <Content>
+                    <Button
+                        fluid='true'
+                        basic
+                        color={buttonColor}
+                        onClick={buttonHandler}
+                        loading={approverLoading}
+                    >
+                        {buttonText}
+                    </Button>
 
-                <Message
+                    <Message
                     error
                     header='Oops!'
                     content={approverError}
                     hidden={!approverError}
                 />
-            </Content>;
+                </Content>;
     }
 
-    if (!request.complete && majorityApproval) {
-        managerButtons =
+    let managerButton;
+    if (isManager && !request.complete && majorityApproval) {
+        managerButton =
             <Content>
                 <Button
                     basic
@@ -242,8 +225,8 @@ function RequestCard(props) {
                     <b>{request.approvalCount}/{approverCount}</b>
                 </Description>
             </Content>
-            {approverButtons}
-            {managerButtons}
+            {approverButton}
+            {managerButton}
         </Card>
     );
 }
