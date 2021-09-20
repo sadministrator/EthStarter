@@ -1,4 +1,4 @@
-# EthStarter: https://eth-starter-pi.vercel.app/
+# EthStarter: https://ethstarter.marcoserrano.com/
 An Ethereum smart contract and fundraising DApp which allows users to create fundraising campaigns and allows campaign contributors to vote on spending requests created by campaign managers.
 
 # Creating a Campaign
