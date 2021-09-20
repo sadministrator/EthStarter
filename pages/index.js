@@ -1,18 +1,23 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button } from 'semantic-ui-react';
 import Link from 'next/link';
 
 import Layout from '../components/Layout'
 import factory from '../ethereum/factory';
 
-class CampaignIndex extends Component {
-    static async getInitialProps() {
-        const campaigns = await factory.methods.getCampaigns().call();
-        return { campaigns }
-    }
+function CampaignIndex() {
+    const [campaigns, setCampaigns] = useState([]);
 
-    renderCampaigns() {
-        const items = this.props.campaigns.map(address => {
+    useEffect(() => {
+        async function fetchCampaigns() {
+            const campaigns = await factory.methods.getCampaigns().call();
+            setCampaigns(campaigns);
+        }
+        fetchCampaigns();
+    });
+
+    const renderCampaigns = () => {
+        const items = campaigns.map(address => {
             return {
                 header: address,
                 description: (
@@ -28,24 +33,22 @@ class CampaignIndex extends Component {
         return <Card.Group items={items} />;
     }
 
-    render() {
-        return (
-            <Layout>
-                <h3>Open Campaigns</h3>
-                <Link href='/campaigns/new'>
-                    <a>
-                        <Button
-                            floated='right'
-                            content='Create Campaign'
-                            icon='add'
-                            primary
-                        />
-                    </a>
-                </Link>
-                {this.renderCampaigns()}
-            </Layout>
-        );
-    }
+    return (
+        <Layout>
+            <h3>Open Campaigns</h3>
+            <Link href='/campaigns/new'>
+                <a>
+                    <Button
+                        floated='right'
+                        content='Create Campaign'
+                        icon='add'
+                        primary
+                    />
+                </a>
+            </Link>
+            {renderCampaigns()}
+        </Layout>
+    );
 }
 
 export default CampaignIndex;
